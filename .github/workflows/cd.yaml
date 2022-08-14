@@ -24,9 +24,8 @@ jobs:
     - name: Checkout cpython
       uses: actions/checkout@v2
       with:
-        owner: python
-        repo: cpython
-        ref: 3.10
+        name: python/cpython
+        ref: refs/tags/3.10
         path: cpython
     - name: Configure cpython
       env:
