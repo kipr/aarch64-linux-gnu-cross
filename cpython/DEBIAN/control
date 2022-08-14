@@ -1,0 +1,5 @@
+Package: kiprpython
+Version: CPYTHON_VERSION
+Architecture: arm64
+Maintainer: KISS Institute for Practical Robotics <support@kipr.org>
+Description: cpython for aarch64-linux-gnu

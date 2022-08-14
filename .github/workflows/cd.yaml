@@ -1,0 +1,101 @@
+name: CD
+
+on:
+  push:
+    tags:
+      - '*'
+
+env:
+  CPYTHON_VERSION: 3.10
+
+
+jobs:
+  cpython:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout self
+      uses: actions/checkout@v2
+      with:
+        path: self
+    - name: Install aarch64-linux-gnu cross tools
+      run: |
+        apt-get update
+        apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-dev-arm64-cross python3.10
+    - name: Checkout cpython
+      uses: actions/checkout@v2
+      with:
+        owner: python
+        repo: cpython
+        ref: 3.10
+        path: cpython
+    - name: Configure cpython
+      env:
+        REVISION: ${{ github.ref_name }}
+      run: |
+        mkdir kiprpython_${CPYTHON_VERSION}-${REVISION}_aarch64 \
+        ./configure \
+          CC=aarch64-linux-gnu-gcc \
+          CXX=aarch64-linux-gnu-g++ \
+          "CPP=aarch64-linux-gnu-g++ -E" \
+          AR=aarch64-linux-gnu-ar \
+          RANLIB=aarch64-linux-gnu-ranlib \
+          LD=aarch64-linux-gnu-ld \
+          READELF=aarch64-linux-gnu-readelf \
+          --prefix=$(pwd)/kiprpython_${CPYTHON_VERSION}-${REVISION}_aarch64 \
+          --disable-ipv6 \
+          --enable-shared \
+          --host=aarch64-linux-gnu \
+          --target=aarch64-linux-gnu \
+          --build=x86_64-pc-linux-gnu \
+          --with-ensurepip=yes \
+          --enable-optimizations \
+          ac_cv_have_long_long_format=yes \
+          ac_cv_file__dev_ptmx=no \
+          ac_cv_file__dev_ptc=no
+      working-directory: cpython
+    - name: Build cpython
+      run: |
+        make
+      working-directory: cpython
+    - name: Install cpython
+      run: |
+        make install
+      working-directory: cpython
+    - name: Prepare python .deb package
+      env:
+        REVISION: ${{ github.ref_name }}
+      run: |
+        mkdir -p kiprpython_${CPYTHON_VERSION}-${REVISION}_aarch64/DEBIAN
+        cat self/cpython/DEBIAN/control | sed "s/CPYTHON_VERSION/${CPYTHON_VERSION}/g" > cpython/kiprpython_${CPYTHON_VERSION}-1_aarch64/DEBIAN/control
+    - name: Create python .deb package
+      env:
+        REVISION: ${{ github.ref_name }}
+      run: |
+        dpkg-deb --build kiprpython_${CPYTHON_VERSION}-${REVISION}_aarch64
+      working-directory: cpython
+    - name: Create release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: true
+        prerelease: false
+    - name: Upload cpython .deb
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REVISION: ${{ github.ref_name }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: cpython/kiprpython_${CPYTHON_VERSION}-${REVISION}_aarch64.deb
+          asset_name: kiprpython_${CPYTHON_VERSION}-${REVISION}_aarch64.deb
+          asset_content_type: application/x-debian-package
+      - name: Publish release
+        uses: StuYarrow/publish-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          id: ${{ steps.create_release.outputs.id }}
