@@ -31,7 +31,7 @@ jobs:
       env:
         REVISION: ${{ github.ref_name }}
       run: |
-        mkdir kiprpython_${CPYTHON_VERSION}-${REVISION}_aarch64 \
+        mkdir kiprpython_${CPYTHON_VERSION}-${REVISION}_aarch64
         ./configure \
           CC=aarch64-linux-gnu-gcc \
           CXX=aarch64-linux-gnu-g++ \
