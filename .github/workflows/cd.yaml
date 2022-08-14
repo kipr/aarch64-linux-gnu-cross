@@ -84,18 +84,18 @@ jobs:
         draft: true
         prerelease: false
     - name: Upload cpython .deb
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REVISION: ${{ github.ref_name }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: cpython/kiprpython_${CPYTHON_VERSION}-${REVISION}_aarch64.deb
-          asset_name: kiprpython_${CPYTHON_VERSION}-${REVISION}_aarch64.deb
-          asset_content_type: application/x-debian-package
-      - name: Publish release
-        uses: StuYarrow/publish-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          id: ${{ steps.create_release.outputs.id }}
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REVISION: ${{ github.ref_name }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: cpython/kiprpython_${CPYTHON_VERSION}-${REVISION}_aarch64.deb
+        asset_name: kiprpython_${CPYTHON_VERSION}-${REVISION}_aarch64.deb
+        asset_content_type: application/x-debian-package
+    - name: Publish release
+      uses: StuYarrow/publish-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        id: ${{ steps.create_release.outputs.id }}
